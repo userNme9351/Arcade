@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script>
+            let errorCounter = 0;
+            window.onerror = (err, src, ln, col) => {
+                if (errorCounter < 10) {
+                    alert(`Error: ${err} \n Line: ${ln}`);
+                }
+                errorCounter++;
+            }
+        </script>
+        <script src="main.js" defer></script>
+        <style>
+            :root {
+                --background: #10121c;
+            }
+        
+            body {
+                margin: 0;
+                padding: 0;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                background: var(--background);
+            }
+            
+            canvas {
+                image-rendering: pixelated;
+                background: var(--background);
+            }
+        </style>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>PRISM</title>
+    </head>
+    <body>
+        <canvas width="0" height="0"></canvas>
+    </body>
+</html>
