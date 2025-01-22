@@ -72,6 +72,10 @@ function getTextSize(ctx, str, size, bold = false) { // Returns a TextMetrics ob
     return ctx.measureText(str);
 }
 
+const sequence = [
+    0, 0, 1, 1, 2, 3, 2, 3, 5, 4, 6
+];
+
 const maps = [
     [
         'rrr   ',
@@ -139,6 +143,12 @@ window.onresize = () => {
 }
 
 window.onresize();
+
+let highScore = parseInt(localStorage.getItem('highScore'));
+
+if (isNaN(highScore) || highScore === null) {
+    highScore = -1;
+}
 
 const pWidth = 10;
 const pHeight = 10;
@@ -295,6 +305,14 @@ function doPlayerLogic() {
                             map[i][j] = 0;
                         }
                     }
+
+                    const currentScore = rocksDestroyed * 2 + gemsDestroyed * 50;
+                    if (currentScore > highScore) {
+                        highScore = currentScore;
+                        localStorage.setItem('highScore', highScore.toFixed(0));
+                    }
+
+                    break;
                 }
             }
         }
@@ -617,7 +635,7 @@ function drawDeathScreen(ctx, timer) {
             distanceText = '0m';
         } else {
             const distance = Math.round(maxDepth * Math.min((timer - second * 5.5)/second, 1) / 10);
-            distanceText = addCommas(`${distance}`) + 'm';
+            distanceText = addCommas(distance.toFixed(0)) + 'm';
         }
         const distanceWidth = getTextSize(ctx, distanceText, 6, true).width;
         drawText(ctx, 64 - distanceWidth * 0.5, 27, distanceText, 6, true);
@@ -661,7 +679,7 @@ function drawDeathScreen(ctx, timer) {
         const textDistanceScale = textSize * 0.125;
         
         if (timer > second * 7.5) {
-            let fsText = addCommas(`${rocksDestroyed * 20 + gemsDestroyed * 500}`);
+            let fsText = addCommas((rocksDestroyed * 20 + gemsDestroyed * 500).toFixed(0));
             
             if (timer < second * 8) {
                 rockString = '0';
@@ -671,10 +689,20 @@ function drawDeathScreen(ctx, timer) {
                 rockString = Math.floor(rocksDestroyed * Math.min((timer - second * 8)/second, 1));
                 gemString = Math.floor(gemsDestroyed * Math.min((timer - second * 8)/second, 1));
                 
-                fsText = addCommas(`${(rockString * 20 + gemString * 500)}`);
+                fsText = addCommas((rockString * 20 + gemString * 500).toFixed(0));
                 
                 rockString = `${rockString}`
                 gemString = `${gemString}`
+            } else if (timer >= second * 9.5) {
+                if (highScore >= 0) {
+                    const hsTextWidth = getTextSize(ctx, 'High Score', 4, true).width;
+                    drawText(ctx, 64 - hsTextWidth * 0.5, 98, 'High Score', 4, true);
+            
+                    const hsString = addCommas((highScore * 10).toFixed());
+            
+                    const highScoreWidth = getTextSize(ctx, hsString, 6, true).width;
+                    drawText(ctx, 64 - highScoreWidth * 0.5, 106, hsString, 6, true);
+                }
             }
             
             const rockStringWidth = getTextSize(ctx, rockString, textSize, true).width;
@@ -706,12 +734,12 @@ function drawDeathScreen(ctx, timer) {
             drawText(ctx, 64 - fsWidth * 0.5, 80, 'Final Score', 6, true);
             
             const fsCounterWidth = getTextSize(ctx, fsText, 8, true).width;
-            drawText(ctx, 64 - fsCounterWidth * 0.5, 90, fsText, 8, true);
+            drawText(ctx, 64 - fsCounterWidth * 0.5, 89, fsText, 8, true);
         }
         
         if (timer > second * 10) {
             const restartWidth = getTextSize(ctx, 'Press \u{2B9F} or S to Restart', 8, true).width;
-            drawText(ctx, 64 - restartWidth * 0.5, 110, 'Press \u{2B9F} or S to Restart', 8, true);
+            drawText(ctx, 64 - restartWidth * 0.5, 120, 'Press \u{2B9F} or S to Restart', 8, true);
         }
     }
 }
@@ -722,10 +750,6 @@ const keyCodes = [
     'arrowleft',
     'arrowright',
     'a', 'b', 'enter'
-];
-
-const sequence = [
-    0, 0, 1, 1, 2, 3, 2, 3, 5, 4, 6
 ];
 
 const palettes = [
@@ -857,11 +881,11 @@ function titleScreen(ctx) {
 
         const palletteWidth = getTextSize(ctx,
             'Press \u{2B9C}\u{200A}/\u{200A}A and \u{2B9E}\u{200A}/\u{200A}D to cycle palettes', 4, true).width;
-        drawText(ctx, 64 - palletteWidth * 0.5, 80,
+        drawText(ctx, 64 - palletteWidth * 0.5, 100,
             'Press \u{2B9C}\u{200A}/\u{200A}A and \u{2B9E}\u{200A}/\u{200A}D to cycle palettes', 4, true);
         
         const glowWidth = getTextSize(ctx, 'Press \u{2B9D}/W to enable/disable glowing', 4, true).width;
-        drawText(ctx, 64 - glowWidth * 0.5, 88, 'Press \u{2B9D}/W to enable/disable glowing', 4, true);
+        drawText(ctx, 64 - glowWidth * 0.5, 108, 'Press \u{2B9D}/W to enable/disable glowing', 4, true);
         ctx.globalAlpha = globalOpacity;
     }
     
@@ -872,6 +896,16 @@ function titleScreen(ctx) {
     
     const subtitleWidth = getTextSize(ctx, 'Press \u{2B9F}/\u{200A}S to Dive', 10, true).width;
     drawText(ctx, 64 - subtitleWidth * 0.5, 64, 'Press \u{2B9F}/\u{200A}S to Dive', 10, true);
+
+    if (highScore >= 0) {
+        const hsTextWidth = getTextSize(ctx, 'High Score', 6, true).width;
+        drawText(ctx, 64 - hsTextWidth * 0.5, 76, 'High Score', 6, true);
+
+        const hsString = addCommas((highScore * 10).toFixed());
+
+        const highScoreWidth = getTextSize(ctx, hsString, 6, true).width;
+        drawText(ctx, 64 - highScoreWidth * 0.5, 84, hsString, 6, true);
+    }
     
     setColor(ctx, 1);
     drawRect(ctx, 0, 0, 15, 128);
@@ -962,7 +996,6 @@ function update(ctx, time) {
         drawPlayer(ctx);
     } else {
         drawDeathScreen(ctx, deathTimer);
-        console.log([restartTimer, globalOpacity])
         if (keys.arrowdown || keys.s || restartTimer > 0) {
             globalOpacity = Math.max(globalOpacity - 1/60, 0);
             restartTimer++;
