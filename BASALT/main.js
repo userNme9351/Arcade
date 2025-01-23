@@ -522,7 +522,7 @@ function drawBrickBreak(particle, ctx) {
     setColor(ctx, particle[8]);
     drawPoly(ctx, particle[0], particle[1] - yPos, arr);
     
-    if (!isDead || particle[9]) {
+    if ((!isDead || particle[9]) && !paused) {
         particle[0] += particle[4];
         particle[1] += particle[5];
         particle[6] += particle[7];
@@ -587,7 +587,7 @@ function drawBombShockwave(particle, ctx) { // This function is cursed and I hat
     setColor(ctx, 1);
     drawPoly(ctx, particle[0], particle[1] - yPos, arr);
     ctx.globalAlpha = globalOpacity;
-    if (!isDead) {
+    if (!isDead && !paused) {
         particle[2]--;
     }
     
@@ -950,20 +950,41 @@ const tileDrawFunctions = [
 ];
 
 let restartTimer = 0;
+let sKeyDown = false;
+let paused = false;
+
+let timeAtPauseStart = 0;
 
 function update(ctx, time) {
+    const now = Date.now();
     ctx.globalAlpha = globalOpacity;
     
-    //if (Date.now() - time < 5) { // Prevents higher framerates from breaking things
-    //    window.requestAnimationFrame(() => {
-    //        update(ctx, time);
-    //    });
-    //    return;
-    //}
+    if (Date.now() - time < 14 && restartTimer === 0) { // Prevents higher framerates from breaking things
+        window.requestAnimationFrame(() => {
+            update(ctx, time);
+        });
+        return;
+    }
+
+    if ((keys.s || keys.arrowdown) && !sKeyDown) {
+        sKeyDown = true;
+        if (isDead || globalOpacity !== 1) {
+            paused = false;
+        } else {
+            paused = !paused;
+            if (paused) {
+                timeAtPauseStart = Date.now();
+            } else {
+                playTime += (Date.now() - timeAtPauseStart);
+            }
+        }
+    } else if (!(keys.s || keys.arrowdown) && sKeyDown) {
+        sKeyDown = false;
+    }
     
     if (restartTimer < 65) {
         window.requestAnimationFrame(() => {
-            update(ctx, Date.now());
+            update(ctx, now);
         });
     } else {
         window.requestAnimationFrame(() => {
@@ -972,7 +993,7 @@ function update(ctx, time) {
     }
     
     for (let i = 0; i < hitBombs.length; i++) {
-        if (!isDead) {
+        if (!isDead && !paused) {
             hitBombs[i][2]--;
         }
         
@@ -983,7 +1004,9 @@ function update(ctx, time) {
         }
     }
     
-    doPlayerLogic();
+    if (!paused) {
+        doPlayerLogic();
+    }
     
     ctx.clearRect(0, 0, 128*displayMult, 128*displayMult);
     
@@ -1038,6 +1061,26 @@ function update(ctx, time) {
         ]);
         ctx.globalAlpha = globalOpacity;
     }
+
+    if (paused) {
+        ctx.globalAlpha = globalOpacity * 0.875;
+        setColor(ctx, 0);
+        drawRect(ctx, 0, 0, 128, 128);
+        ctx.globalAlpha = globalOpacity;
+
+        setColor(ctx, 2);
+
+        const pauseTextWidth = getTextSize(ctx, 'Paused', 10, true).width;
+        drawText(ctx, 64 - pauseTextWidth * 0.5, 59, 'Paused', 10, true);
+
+        const scoreString = addCommas((rocksDestroyed * 20 + gemsDestroyed * 500).toFixed());
+
+        const scoreTextWidth = getTextSize(ctx, 'Score', 6, true).width;
+        drawText(ctx, 64 - scoreTextWidth * 0.5, 72, 'Score', 6, true);
+
+        const scoreWidth = getTextSize(ctx, scoreString, 8, true).width;
+        drawText(ctx, 64 - scoreWidth * 0.5, 80, scoreString, 8, true);
+    }
     
     ctx.fillStyle = '#0dead0';
 
@@ -1059,6 +1102,7 @@ function initNewGame(ctx) {
     dY = 10;
     
     isDead = false;
+    paused = false;
     deathTimer = 0;
     
     globalOpacity = 0;
