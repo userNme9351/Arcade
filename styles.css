@@ -1,0 +1,191 @@
+:root {
+    --alt-bg: #d8d8d8;
+}
+
+* {
+    font-family: Arial, sans-serif;
+}
+
+body {
+    text-align: center;
+}
+
+h1.title {
+    background: var(--alt-bg);
+    display: inline-block;
+    margin: 10px;
+    padding: 10px;
+    border-radius: 26px;
+    text-align: center;
+    font-size: 24px;
+}
+
+.title-bar {
+    text-align: left;
+}
+
+.search-button {
+    width: 34px;
+    height: 34px;
+    border-radius: 31px;
+    background: var(--alt-bg);
+    float: right;
+    margin: 10px;
+    padding: 10px;
+    text-align: center;
+    transition-duration: 300ms;
+}
+
+.search-button > input {
+    position: absolute;
+    transform: translate(-27px, -10px);
+    width: 34px;
+    height: 34px;
+    outline: none;
+    border-width: 0;
+    background: none;
+    padding: 10px;
+    font-size: 24px;
+    transition-duration: 300ms;
+    opacity: 0;
+}
+
+.search-button > input:focus {
+    width: 240px;
+    transform: translate(-130px, -10px);
+    opacity: 1;
+}
+
+.search-button > input:not(:placeholder-shown) {
+    width: 240px;
+    transform: translate(-130px, -10px);
+    opacity: 1;
+}
+
+.search-button:has(input:focus) {
+    width: 240px;
+}
+
+.search-button:has(input:not(:placeholder-shown)) {
+    width: 240px;
+}
+
+.search-button > svg {
+    position: absolute;
+    pointer-events: none;
+    width: 24px;
+    height: 24px;
+    transform: translate(-12px, 4px);
+    opacity: 1;
+    transition-duration: 100ms;
+}
+
+.search-button:has(input:focus) > svg {
+    opacity: 0;
+}
+
+.search-button:has(input:not(:placeholder-shown)) > svg {
+    opacity: 0;
+}
+
+.card-container {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.card-container-limiter {
+    width: calc(100% - 136px);
+    margin: auto;
+}
+
+.card {
+    background: var(--alt-bg);
+    text-align: left;
+    width: 200px;
+    height: 332px;
+    border-radius: 10px;
+    margin: 10px;
+    display: inline-block;
+    vertical-align: bottom;
+}
+
+.card > a > img {
+    border-radius: 10px 10px 0 0;
+    border-bottom: #fff 5px solid;
+    margin: 0;
+}
+
+.card-text {
+    padding: 2px 16px;
+    padding-bottom: 10px;
+}
+
+.card-text > .header {
+    font-weight: bold;
+    font-size: 18px;
+}
+
+.card-text > .text {
+    font-size: 14px;
+    margin-top: 20px;
+}
+
+.no-results {
+    display: inline-block;
+    color: #888;
+    font-size: 32px;
+    padding-top: 30vh;
+}
+
+.tags {
+    font-size: 14px;
+    padding-top: 10px;
+    display: inline-block;
+}
+
+.tag {
+    border-radius: 10px;
+    padding: 3px;
+    padding-left: 5px;
+    padding-right: 5px;
+    user-select: none;
+    cursor: pointer;
+}
+
+.tag.red {
+    background: #ec273f;
+}
+
+.tag.orange {
+    background: #e98537;
+}
+
+.tag.yellow {
+    background: #f3a833;
+}
+
+.tag.green {
+    background: #9de64e;
+}
+
+.tag.blue {
+    background: #36c5f4;
+}
+
+.tag.purple {
+    background: #c878af;
+}
+
+.tag.pink {
+    background: #ffa2ac;
+}
+
+.tag.brown {
+    background: #a26d3f;
+}
+
+.tag.black {
+    background: #10121c;
+}
