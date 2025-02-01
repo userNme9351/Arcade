@@ -91,7 +91,7 @@ let levelHeight = 0;
 let levelXOffset = 0;
 let levelYOffset = 0;
 
-let levelScaleConstant = 1;
+let levelScale = 1;
 
 let playerX = 0;
 let playerY = 0;
@@ -99,8 +99,10 @@ let playerY = 0;
 let moveCooldown = 0;
 
 const levels = [
-    '7w/w4 ew/w5 w/w5 w/w5 w/w5 w/w5 w/ws4 w/7w'
+    '7w/w3 e w/w5 w/w  b  w/w s3 w/w5 w/7w'
 ];
+
+const boxes = [];
 
 function getLevelTile(letter, xPos, yPos) {
     switch (letter) {
@@ -114,6 +116,22 @@ function getLevelTile(letter, xPos, yPos) {
             return 0;
         case 'e':
             return 2;
+        case 'b':
+            boxes.push([xPos, yPos, 0]);
+            return 0;
+    }
+}
+
+function isSolid(tileType) {
+    switch (tileType) {
+        case 0:
+            return false;
+        case 1:
+            return true;
+        case 2:
+            return false;
+        default:
+            return false;
     }
 }
 
@@ -141,6 +159,7 @@ function parseLevelToken(token, yPos) {
 
 function startGameLevel(ctx, index) {
     for (let i = 0; i < level.length; level.pop()) {} // Cursed
+    for (let i = 0; i < boxes.length; boxes.pop()) {}
 
     const tokens = levels[index].split('/');
 
@@ -153,10 +172,10 @@ function startGameLevel(ctx, index) {
         }
     }
 
-    levelScaleConstant = Math.floor(128 / Math.max(levelWidth, levelHeight));
+    levelScale = Math.floor(128 / Math.max(levelWidth, levelHeight));
 
-    levelXOffset = 64 - levelWidth * levelScaleConstant * 0.5;
-    levelYOffset = 64 - levelHeight * levelScaleConstant * 0.5;
+    levelXOffset = 64 - levelWidth * levelScale * 0.5;
+    levelYOffset = 64 - levelHeight * levelScale * 0.5;
 
     drawCycle(ctx, 0);
 }
@@ -168,36 +187,56 @@ function getTile(x, y) {
     return level[y * levelWidth + x];
 }
 
+function moveBoxes(x, y, dx, dy) {
+    if (!isSolid(getTile(x + dx, y + dy))) {
+        for (let i = 0; i < boxes.length; i++) {
+            if (boxes[i][0] === x + dx && boxes[i][1] === y + dy) {
+                if (moveBoxes(x + dx, y + dy, dx, dy)) {
+                    boxes[i][0] += dx;
+                    boxes[i][1] += dy;
+
+                    return true;
+                }
+                return false;
+            }
+        }
+        return true;
+    }
+
+    return false;
+}
+
 function update(time) {
     moveCooldown = Math.max(moveCooldown - time, 0);
+
+    let dx = 0;
+    let dy = 0;
+
     if (moveCooldown === 0) {
         if ((keys.w && !lastKeys.w) || (keys.arrowup && !lastKeys.arrowup)) {
             moveCooldown = 500;
-            if (getTile(playerX, playerY - 1) !== 1) {
-                playerY--;  
-            }
+            dy--;
         }
     
         if ((keys.s && !lastKeys.s) || (keys.arrowdown && !lastKeys.arrowdown)) {
             moveCooldown = 500;
-            if (getTile(playerX, playerY + 1) !== 1) {
-                playerY++;  
-            }
+            dy++;
         }
     
         if ((keys.a && !lastKeys.a) || (keys.arrowleft && !lastKeys.arrowleft)) {
             moveCooldown = 500;
-            if (getTile(playerX - 1, playerY) !== 1) {
-                playerX--;  
-            }
+            dx--;
         }
     
         if ((keys.d && !lastKeys.d) || (keys.arrowright && !lastKeys.arrowright)) {
             moveCooldown = 500;
-            if (getTile(playerX + 1, playerY) !== 1) {
-                playerX++;  
-            }
+            dx++;
         }
+    }
+
+    if (moveBoxes(playerX, playerY, dx, dy)) { // moveBoxes doubles as a general collision check
+        playerX += dx;
+        playerY += dy;
     }
 
     lastKeys = structuredClone(keys);
@@ -217,27 +256,56 @@ function drawCycle(ctx, time) {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
     for (let i = 0; i < level.length; i++) {
+        const xCoord = i % levelWidth;
+        const yCoord = Math.floor(i / levelWidth);
         if (level[i] === 1) {
-            ctx.fillStyle = '#ffffff';
-            drawTile(ctx, (i % levelWidth), Math.floor(i / levelWidth));
+            drawTile(ctx, xCoord, yCoord);
+        } else if (level[i] === 2) {
+            drawEnd(ctx, xCoord, yCoord);
         }
     }
-
-    ctx.fillStyle = '#ffffff';
+    
+    for (let i = 0; i < boxes.length; i++) {
+        drawBox(ctx, boxes[i][0], boxes[i][1], i)
+    }
+    
     drawPlayer(ctx, playerX, playerY);
 }
 
 function drawPlayer(ctx, x, y) {
-    console.log(x, y)
+    ctx.fillStyle = '#ffffff';
     drawRect(ctx,
-        x * levelScaleConstant + levelXOffset + levelScaleConstant * 0.125,
-        y * levelScaleConstant + levelYOffset + levelScaleConstant * 0.125,
-        levelScaleConstant * 0.75,
-        levelScaleConstant * 0.75);
+        x * levelScale + levelXOffset + levelScale * 0.125,
+        y * levelScale + levelYOffset + levelScale * 0.125,
+        levelScale * 0.75,
+        levelScale * 0.75);
+}
+
+function drawEnd(ctx, x, y) {
+    ctx.fillStyle = '#10121C';
+    drawRect(ctx,
+        (x + 3/32) * levelScale + levelXOffset,
+        (y - 0.5) * levelScale + levelYOffset,
+        levelScale * 13/16,
+        levelScale * 0.5);
 }
 
 function drawTile(ctx, x, y) {
-    drawRect(ctx, x * levelScaleConstant + levelXOffset, y * levelScaleConstant + levelYOffset, levelScaleConstant, levelScaleConstant);
+    ctx.fillStyle = '#ffffff';
+    drawRect(ctx,
+        x * levelScale + levelXOffset,
+        y * levelScale + levelYOffset,
+        levelScale,
+        levelScale);
+}
+
+function drawBox(ctx, x, y, index) {
+    ctx.fillStyle = '#ffffff';
+    drawRect(ctx,
+        x * levelScale + levelXOffset + levelScale * 0.125,
+        y * levelScale + levelYOffset + levelScale * 0.125,
+        levelScale * 0.75,
+        levelScale * 0.75);
 }
 
 startGameLevel(ctx, 0);
