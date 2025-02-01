@@ -144,10 +144,17 @@ window.onresize = () => {
 
 window.onresize();
 
-let highScore = parseInt(localStorage.getItem('highScore'));
+let highScore = parseInt(localStorage.getItem('BASALT.variables.highScore'));
 
 if (isNaN(highScore) || highScore === null) {
-    highScore = -1;
+    highScore = parseInt(localStorage.getItem('highScore'));
+
+    if (isNaN(highScore) || highScore === null) {
+        highScore = -1;
+    } else {
+        localStorage.setItem('BASALT.variables.highScore', highScore.toFixed(0));
+        localStorage.removeItem('highScore');
+    }
 }
 
 const pWidth = 10;
@@ -309,7 +316,7 @@ function doPlayerLogic() {
                     const currentScore = rocksDestroyed * 2 + gemsDestroyed * 50;
                     if (currentScore > highScore) {
                         highScore = currentScore;
-                        localStorage.setItem('highScore', highScore.toFixed(0));
+                        localStorage.setItem('BASALT.variables.highScore', highScore.toFixed(0));
                     }
 
                     break;
