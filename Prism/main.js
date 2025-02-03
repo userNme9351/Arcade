@@ -99,12 +99,14 @@ let playerY = 0;
 let moveCooldown = 0;
 
 const levels = [
-    '7w/w3 e w/w5 w/w  b  w/w s3 w/w5 w/7w'
+    's ww  www/ 3w  w w/ 4w www/6 www/  ww  ww /3w3 www'
 ];
 
 const boxes = [];
 
-function getLevelTile(letter, xPos, yPos) {
+const levelDrawCalls = [];
+
+function getTileFromChar(letter, xPos, yPos) {
     switch (letter) {
         case ' ':
             return 0;
@@ -143,13 +145,13 @@ function parseLevelToken(token, yPos) {
         if (/\d/.test(first)) {
             const count = parseInt(first);
             i++;
-            const tile = getLevelTile(token.charAt(i), xPos, yPos);
+            const tile = getTileFromChar(token.charAt(i), xPos, yPos);
             for (let j = 0; j < count; j++) {
                 arr.push(tile);
                 xPos++;
             }
         } else {
-            arr.push(getLevelTile(token.charAt(i), xPos, yPos));
+            arr.push(getTileFromChar(token.charAt(i), xPos, yPos));
             xPos++;
         }
     }
@@ -158,8 +160,8 @@ function parseLevelToken(token, yPos) {
 }
 
 function startGameLevel(ctx, index) {
-    for (let i = 0; i < level.length; level.pop()) {} // Cursed
-    for (let i = 0; i < boxes.length; boxes.pop()) {}
+    level.length = 0;
+    boxes.length = 0;
 
     const tokens = levels[index].split('/');
 
@@ -172,19 +174,53 @@ function startGameLevel(ctx, index) {
         }
     }
 
-    levelScale = Math.floor(128 / Math.max(levelWidth, levelHeight));
+    levelScale = Math.floor(128 / (Math.max(levelWidth, levelHeight) + 2));
 
     levelXOffset = 64 - levelWidth * levelScale * 0.5;
     levelYOffset = 64 - levelHeight * levelScale * 0.5;
+
+    generateWallDrawCalls(levelDrawCalls);
 
     drawCycle(ctx, 0);
 }
 
 function getTile(x, y) {
-    if (x < 0 || x >= levelWidth || y < 0 || y > levelWidth) {
+    if (x < 0 || x >= levelWidth || y < 0 || y >= levelHeight) {
         return 1;
     }
     return level[y * levelWidth + x];
+}
+
+/**
+ * @param {number[]} drawCalls Each call is stored in series as ...[x, y, width, height]
+ */
+function generateWallDrawCalls(drawCalls) {
+    drawCalls.length = 0;
+
+    const tileCoverData = []; // Each tile is stored in series as ...[right, down]
+
+    function setTileCoverData(x, y, index, value) {
+        tileCoverData[((x + 1) * (levelWidth + 2) + y + 1) * 2 + index] = value;
+    }
+
+    function getTileCoverData(x, y, index) {
+        return tileCoverData[((x + 1) * (levelWidth + 2) + y + 1) * 2 + index];
+    }
+
+    for (let x = -1; x <= levelWidth; x++) {
+        for (let y = -1; y <= levelHeight; y++) {
+            const self = getTile(x, y) !== 1;
+            const right = getTile(x + 1, y) !== 1 || self || x === levelWidth;
+            const down = getTile(x, y + 1) !== 1 || self || y === levelHeight;
+            tileCoverData.push(right, down);
+        }
+    }
+
+    // TODO: Greedy meshing
+
+    for (let i = 0; i < drawCalls.length; i += 4) {
+        console.log(i/4, drawCalls[i], drawCalls[i + 1], drawCalls[i + 2], drawCalls[i + 3]);
+    }
 }
 
 function moveBoxes(x, y, dx, dy) {
@@ -239,7 +275,7 @@ function update(time) {
         playerY += dy;
     }
 
-    lastKeys = structuredClone(keys);
+    lastKeys = structuredClone(keys); // Duplicate keys into lastKeys
 }
 
 /**
@@ -255,12 +291,12 @@ function drawCycle(ctx, time) {
 
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
+    drawWalls(ctx, levelDrawCalls);
+
     for (let i = 0; i < level.length; i++) {
         const xCoord = i % levelWidth;
         const yCoord = Math.floor(i / levelWidth);
-        if (level[i] === 1) {
-            drawTile(ctx, xCoord, yCoord);
-        } else if (level[i] === 2) {
+        if (level[i] === 2) {
             drawEnd(ctx, xCoord, yCoord);
         }
     }
@@ -290,13 +326,24 @@ function drawEnd(ctx, x, y) {
         levelScale * 0.5);
 }
 
-function drawTile(ctx, x, y) {
-    ctx.fillStyle = '#ffffff';
-    drawRect(ctx,
-        x * levelScale + levelXOffset,
-        y * levelScale + levelYOffset,
-        levelScale,
-        levelScale);
+function drawWalls(ctx, drawCalls) {
+    ctx.fillStyle = '#1E1E25';
+    for (let i = 0; i < drawCalls.length; i+=4) {
+        drawRect(ctx,
+            drawCalls[i]   * levelScale + levelXOffset,
+            drawCalls[i+1] * levelScale + levelYOffset,
+            drawCalls[i+2] * levelScale,
+            drawCalls[i+3] * levelScale);
+    }
+
+    ctx.fillStyle = '#787887';
+    for (let i = 0; i < drawCalls.length; i+=4) {
+        drawRect(ctx,
+            (drawCalls[i]   + 0.125) * levelScale + levelXOffset,
+            (drawCalls[i+1] + 0.125) * levelScale + levelYOffset,
+            (drawCalls[i+2] - 0.25) * levelScale,
+            (drawCalls[i+3] - 0.25) * levelScale);
+    }
 }
 
 function drawBox(ctx, x, y, index) {
