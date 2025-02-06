@@ -99,7 +99,7 @@ let playerY = 0;
 let moveCooldown = 0;
 
 const levels = [
-    's ww  www/ 3w  w w/ 4w www/6 www/  ww  ww /3w3 www'
+    's ww  www/ 3w  w w/ ww w www/6 www/  ww  ww /3w3 www'
 ];
 
 const boxes = [];
@@ -191,32 +191,140 @@ function getTile(x, y) {
     return level[y * levelWidth + x];
 }
 
+const debugCalls = [];
+
 /**
  * @param {number[]} drawCalls Each call is stored in series as ...[x, y, width, height]
  */
 function generateWallDrawCalls(drawCalls) {
     drawCalls.length = 0;
+    debugCalls.length = 0;
 
-    const tileCoverData = []; // Each tile is stored in series as ...[right, down]
+    function doGreedyMeshing(array) {
+        const mesh = [];
+        for (let y = 0; y < levelHeight + 2; y++) {
+            for (let x = 0; x < levelWidth + 2; x++) {
+                if (array[y * (levelWidth  + 2) + x]) {
+                    let dx = 0;
+                    for (;x + dx < levelWidth + 2; dx++) {
+                        if (!array[y * (levelWidth + 2) + x + dx]) {
+                            break;
+                        }
+                    }
 
-    function setTileCoverData(x, y, index, value) {
-        tileCoverData[((x + 1) * (levelWidth + 2) + y + 1) * 2 + index] = value;
+                    let dy = 0;
+                    for (;y + dy < levelHeight + 2; dy++) {
+                        let doBreak = false;
+                        for (let testX = x; testX < x + dx; testX++) {
+                            if (!array[(y + dy) * (levelWidth + 2) + testX]) {
+                                doBreak = true;
+                                break;
+                            }
+                        }
+                        if (doBreak) {
+                            break;
+                        }
+                    }
+
+                    for (let nx = x; nx < x + dx; nx++) {
+                        for (let ny = y; ny < y + dy; ny++) {
+                            //array[ny * (levelWidth  + 2) + nx] = false;
+                        }
+                    }
+
+                    mesh.push(x, y, dx, dy);
+                }
+            }
+        }
+
+        return mesh;
     }
 
-    function getTileCoverData(x, y, index) {
-        return tileCoverData[((x + 1) * (levelWidth + 2) + y + 1) * 2 + index];
-    }
+    const mapCoverage = [];
 
-    for (let x = -1; x <= levelWidth; x++) {
-        for (let y = -1; y <= levelHeight; y++) {
-            const self = getTile(x, y) !== 1;
-            const right = getTile(x + 1, y) !== 1 || self || x === levelWidth;
-            const down = getTile(x, y + 1) !== 1 || self || y === levelHeight;
-            tileCoverData.push(right, down);
+    const rightCoverData = [];
+    const downCoverData = [];
+
+    for (let y = -1; y <= levelHeight; y++) {
+        for (let x = -1; x <= levelWidth; x++) {
+            const isWall = getTile(x, y) === 1;
+
+            mapCoverage.push(isWall);
+
+            rightCoverData.push(x !== levelWidth && isWall && getTile(x + 1, y) === 1);
+            downCoverData.push(y !== levelHeight && isWall && getTile(x, y + 1) === 1);
         }
     }
 
-    // TODO: Greedy meshing
+    //for (let y = -1; y <= levelHeight; y++) {
+    //    for (let x = -1; x <= levelWidth; x++) {
+    //        if (rightCoverData[(y + 1) * (levelWidth + 2) + x + 1]) {
+    //            debugCalls.push(x + 0.75, y + 0.375, 0.5, 0.25);
+    //        }
+    //
+    //        if (downCoverData[(y + 1) * (levelWidth + 2) + x + 1]) {
+    //            debugCalls.push(x + 0.375, y + 0.75, 0.25, 0.5);
+    //        }
+    //    }
+    //}
+
+    const rightMesh = doGreedyMeshing(rightCoverData);
+    const downMesh = doGreedyMeshing(downCoverData);
+
+    for (let i = 0; i < rightMesh.length; i += 4) {
+        rightMesh[i]--;
+        rightMesh[i + 1]--;
+        rightMesh[i + 2]++;
+    }
+
+    for (let i = 0; i < downMesh.length; i += 4) {
+        downMesh[i]--;
+        downMesh[i + 1]--;
+        downMesh[i + 3]++;
+    }
+
+    drawCalls.push(...rightMesh);
+    drawCalls.push(...downMesh);
+
+    for (let i = 0; i < drawCalls.length - 4; i += 4) { // Mesh optimization
+        for (let j = i + 4; j < drawCalls.length; j += 4) {
+            const x1 = drawCalls[i];
+            const y1 = drawCalls[i + 1];
+            const w1 = drawCalls[i + 2];
+            const h1 = drawCalls[i + 3];
+            const x2 = drawCalls[j];
+            const y2 = drawCalls[j + 1];
+            const w2 = drawCalls[j + 2];
+            const h2 = drawCalls[j + 3];
+            if (x1 <= x2 && y1 <= y2 && x1 + w1 >= x2 + w2 && y1 + h1 >= y2 + h2) { // j is within i
+                drawCalls.splice(j, 4);
+                j -= 4;
+                continue;
+            }
+
+            if (x1 >= x2 && y1 >= y2 && x1 + w1 <= x2 + w2 && y1 + h1 <= y2 + h2) { // i is within j
+                drawCalls.splice(i, 4);
+                j -= 4;
+                i -= 4;
+            }
+        }
+    }
+
+    for (let i = 0; i < drawCalls.length; i += 4) {
+        for (let y = drawCalls[i + 1] + 1; y < drawCalls[i + 1] + drawCalls[i + 3] + 1; y++) {
+            for (let x = drawCalls[i] + 1; x < drawCalls[i] + drawCalls[i + 2] + 1; x++) {
+                mapCoverage[y * (levelWidth + 2) + x] = false;
+            }
+        }
+    }
+
+    for (let y = 0; y < levelHeight + 2; y++) {
+        for (let x = 0; x < levelWidth + 2; x++) {
+            if (mapCoverage[y * (levelWidth + 2) + x]) {
+                drawCalls.push(x - 1, y - 1, 1, 1)
+            }
+        }
+    }
 
     for (let i = 0; i < drawCalls.length; i += 4) {
         console.log(i/4, drawCalls[i], drawCalls[i + 1], drawCalls[i + 2], drawCalls[i + 3]);
@@ -291,7 +399,20 @@ function drawCycle(ctx, time) {
 
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
 
+    ctx.fillStyle = '#3C3C46';
+    drawRect(ctx, levelXOffset - levelScale, levelYOffset - levelScale, (levelWidth + 2) * levelScale, (levelHeight + 2) * levelScale);
+
     drawWalls(ctx, levelDrawCalls);
+
+    ctx.fillStyle = '#C2C2C6';
+    //ctx.fillStyle = '#FF0000';
+    drawRect(ctx, 0, 0, levelXOffset - levelScale * 0.5, 128);
+    drawRect(ctx, 0, 0, 128, levelYOffset - levelScale * 0.5);
+
+    drawRect(ctx, levelXOffset + (levelWidth + 0.5) * levelScale, 0, 128 - levelXOffset - (levelWidth + 0.5) * levelScale, 128);
+    drawRect(ctx, 0, levelYOffset + (levelHeight + 0.5) * levelScale, 128, 128 - levelYOffset - (levelHeight + 0.5) * levelScale);
+
+    drawDebug(ctx, debugCalls);
 
     for (let i = 0; i < level.length; i++) {
         const xCoord = i % levelWidth;
@@ -309,7 +430,7 @@ function drawCycle(ctx, time) {
 }
 
 function drawPlayer(ctx, x, y) {
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#FFFFFF';
     drawRect(ctx,
         x * levelScale + levelXOffset + levelScale * 0.125,
         y * levelScale + levelYOffset + levelScale * 0.125,
@@ -343,6 +464,26 @@ function drawWalls(ctx, drawCalls) {
             (drawCalls[i+1] + 0.125) * levelScale + levelYOffset,
             (drawCalls[i+2] - 0.25) * levelScale,
             (drawCalls[i+3] - 0.25) * levelScale);
+    }
+
+    ctx.fillStyle = '#C2C2C6';
+    for (let i = 0; i < drawCalls.length; i+=4) {
+        drawRect(ctx,
+            (drawCalls[i]   + 0.25) * levelScale + levelXOffset,
+            (drawCalls[i+1] + 0.25) * levelScale + levelYOffset,
+            (drawCalls[i+2] - 0.5) * levelScale,
+            (drawCalls[i+3] - 0.5) * levelScale);
+    }
+}
+
+function drawDebug(ctx, drawCalls) {
+    ctx.fillStyle = '#FF0000';
+    for (let i = 0; i < drawCalls.length; i+=4) {
+        drawRect(ctx,
+            drawCalls[i]   * levelScale + levelXOffset,
+            drawCalls[i+1] * levelScale + levelYOffset,
+            drawCalls[i+2] * levelScale,
+            drawCalls[i+3] * levelScale);
     }
 }
 
