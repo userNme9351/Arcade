@@ -128,11 +128,7 @@ const maps = [
     ]
 ];
 
-let COLORS = [
-    '#10121c',
-    '#fa0c1c',
-    '#f5f4e6'
-];
+let COLORS;
 
 window.onresize = () => {
     displayMult = Math.floor(Math.min(
@@ -155,6 +151,10 @@ if (isNaN(highScore) || highScore === null) {
         localStorage.setItem('BASALT.variables.highScore', highScore.toFixed(0));
         localStorage.removeItem('highScore');
     }
+}
+
+if (highScore > 10000) {
+    localStorage.setItem('BASALT.variables.codeCompleted', 1);
 }
 
 const pWidth = 10;
@@ -316,6 +316,9 @@ function doPlayerLogic() {
                     const currentScore = rocksDestroyed * 2 + gemsDestroyed * 50;
                     if (currentScore > highScore) {
                         highScore = currentScore;
+                        if (highScore > 10000) {
+                            localStorage.setItem('BASALT.variables.codeCompleted', 1);
+                        }
                         localStorage.setItem('BASALT.variables.highScore', highScore.toFixed(0));
                     }
 
@@ -604,7 +607,7 @@ function drawBombShockwave(particle, ctx) { // This function is cursed and I hat
 // Unused particle
 function draw500Points(particle, ctx) {
     const dimensions = getTextSize(ctx, '+500', 8, true);
-    setColor(ctx, 2);
+    setColor(ctx, 3);
     ctx.globalAlpha = (1 - particle[2] / 30) * globalOpacity;
     drawText(ctx, particle[0] - dimensions.width * 0.5, particle[1] - yPos - particle[2] * 0.1, '+500', 4, true);
     ctx.globalAlpha = globalOpacity;
@@ -621,7 +624,7 @@ function drawDeathScreen(ctx, timer) {
     const second = 60;
     if (timer > second * 4) {
         const width = getTextSize(ctx, 'Game Over', 14, true).width;
-        setColor(ctx, 2);
+        setColor(ctx, 3);
         drawText(ctx, 64 - width * 0.5, 12, 'Game Over', 14, true);
     }
     if (timer > second * 5) { // Game timer
@@ -670,6 +673,8 @@ function drawDeathScreen(ctx, timer) {
             const angle = (i*2/3 + 7/30) * Math.PI; // 7/30 was also generated randomly; I no longer understand math
             drawPoly(ctx, Math.cos(angle) * 3.5 + 32.25, Math.sin(angle) * 3.5 + 63.75, triangleArr);
         }
+
+        setColor(ctx, 3);
 
         let textSize = 8;
         
@@ -763,41 +768,120 @@ const palettes = [
     [
         '#10121c',
         '#fa0c1c',
-        '#f5f4e6'
+        '#f5f4e6',
+        '#f5f4e6',
+        'Mantle'
     ], [
         '#26854c',
         '#5ab552',
-        '#9de64e'
+        '#9de64e',
+        '#9de64e',
+        'Verdant'
     ], [
         '#94493a',
         '#e98537',
-        '#f3a833'
+        '#f3a833',
+        '#f3a833',
+        'Sands'
     ], [
         '#081820',
         '#88c070',
-        '#e0f8d0'
+        '#e0f8d0',
+        '#e0f8d0',
+        'Luminance'
     ], [
         '#45283c',
         '#66313d',
-        '#ac3232'
+        '#ac3232',
+        '#ac3232',
+        'Sanguine'
     ], [
         '#8e6bff',
         '#fe89d9',
-        '#f3bbe7'
+        '#f3bbe7',
+        '#f3bbe7',
+        'Sugar Rush'
     ], [
         '#8d697a',
         '#ffaa5e',
-        '#ffd4a3'
+        '#ffd4a3',
+        '#ffd4a3',
+        'Splendor'
     ], [
-        '#130208',
-        '#1f0510',
-        '#31051e'
+        '#1d1017',
+        '#3b1725',
+        '#73172d',
+        '#73172d',
+        'Aberration'
+    ], [
+        '#ded9da',
+        '#e61523',
+        '#ded9da',
+        '#e61523',
+        'Labyrinth'
+    ], [
+        '#3e2731',
+        '#e43b44',
+        '#ead4aa',
+        '#ead4aa',
+        'Cozy'
+    ], [
+        '#68386c',
+        '#f77622',
+        '#fee761',
+        '#fee761',
+        'Spirit'
+    ], [
+        '#262b44',
+        '#5a6988',
+        '#c0cbdc',
+        '#c0cbdc',
+        'Superstructure'
+    ], [
+        '#252446',
+        '#1e579c',
+        '#0098db',
+        '#0098db',
+        'Deep Blue'
+    ], [
+        '#212123',
+        '#868188',
+        '#f2f0e5',
+        '#f488ae',
+        'Yaya!'
+    ], [
+        '#d03791',
+        '#fe6c90',
+        '#ffffff',
+        '#ffffff',
+        'Cherry'
+    ], [
+        '#202020',
+        '#393939',
+        '#cd894a',
+        '#c0cbdc',
+        'Affluence'
     ]
 ];
 
 let currentCodeIndex = 0;
+let tipFadeTimer = 0;
+
+let codeCompleted = parseInt(localStorage.getItem('BASALT.variables.codeCompleted'));
 
 let currentPalette = 0;
+let doGlow = false;
+
+if (!isNaN(codeCompleted) && codeCompleted !== null) {
+    currentCodeIndex = sequence.length;
+    tipFadeTimer = 60;
+
+    let savedPaletteIndex = parseInt(localStorage.getItem('BASALT.variables.paletteIndex'));
+    if (!isNaN(savedPaletteIndex) && savedPaletteIndex !== null) {
+        currentPalette = savedPaletteIndex % palettes.length;
+        doGlow = savedPaletteIndex >= palettes.length;
+    }
+}
 
 let keyState = false;
 
@@ -807,13 +891,11 @@ let uKeyDown = false;
 
 let titleBarPos = 0;
 
-let tipFadeTimer = 0;
-
-let doGlow = false;
-
 function setPalette(index) {
     COLORS = palettes[index];
     document.documentElement.style.setProperty('--background', COLORS[0]);
+
+    localStorage.setItem('BASALT.variables.paletteIndex', index + (doGlow ? palettes.length : 0));
 }
 
 function titleScreen(ctx) {
@@ -826,6 +908,8 @@ function titleScreen(ctx) {
             initNewGame(ctx);
         });
     }
+
+    setPalette(currentPalette);
     
     const keyList = Object.keys(keys);
     
@@ -833,6 +917,7 @@ function titleScreen(ctx) {
         uKeyDown = true;
         if (currentCodeIndex === sequence.length) {
             doGlow = !doGlow;
+            localStorage.setItem('BASALT.variables.paletteIndex', currentPalette + (doGlow ? palettes.length : 0));
         }
     } else if (!(keys.w || keys.arrowup) && uKeyDown) {
         uKeyDown = false;
@@ -841,7 +926,10 @@ function titleScreen(ctx) {
     if ((keys.a || keys.arrowleft) && !lKeyDown) {
         lKeyDown = true;
         if (currentCodeIndex === sequence.length) {
-            currentPalette = (currentPalette + 1) % palettes.length;
+            currentPalette -= 1;
+            if (currentPalette < 0) {
+                currentPalette += palettes.length;
+            }
             
             setPalette(currentPalette);
         }
@@ -852,10 +940,7 @@ function titleScreen(ctx) {
     if ((keys.d || keys.arrowright) && !rKeyDown) {
         rKeyDown = true;
         if (currentCodeIndex === sequence.length) {
-            currentPalette -= 1;
-            if (currentPalette < 0) {
-                currentPalette += palettes.length;
-            }
+            currentPalette = (currentPalette + 1) % palettes.length;
             
             setPalette(currentPalette);
         }
@@ -866,6 +951,9 @@ function titleScreen(ctx) {
     if (!keyState && keyList.length > 0 && currentCodeIndex < sequence.length) {
         if (keyList.length === 1 && keys[keyCodes[sequence[currentCodeIndex]]]) {
             currentCodeIndex++;
+            if (currentCodeIndex === sequence.length) {
+                localStorage.setItem('BASALT.variables.codeCompleted', 1);
+            }
         } else {
             currentCodeIndex = 0;
         }
@@ -880,19 +968,23 @@ function titleScreen(ctx) {
     
     ctx.clearRect(0, 0, 128*displayMult, 128*displayMult);
     
-    setColor(ctx, 2);
+    setColor(ctx, 3);
     
     if (currentCodeIndex === sequence.length) {
         tipFadeTimer = Math.min(tipFadeTimer + 1, 60);
         ctx.globalAlpha = globalOpacity * (tipFadeTimer / 60);
+        
+        const glowWidth = getTextSize(ctx, 'Press \u{2B9D}/W to enable/disable glowing', 4, true).width;
+        drawText(ctx, 64 - glowWidth * 0.5, 100, 'Press \u{2B9D}/W to enable/disable glowing', 4, true);
 
         const palletteWidth = getTextSize(ctx,
             'Press \u{2B9C}\u{200A}/\u{200A}A and \u{2B9E}\u{200A}/\u{200A}D to cycle palettes', 4, true).width;
-        drawText(ctx, 64 - palletteWidth * 0.5, 100,
+        drawText(ctx, 64 - palletteWidth * 0.5, 112,
             'Press \u{2B9C}\u{200A}/\u{200A}A and \u{2B9E}\u{200A}/\u{200A}D to cycle palettes', 4, true);
-        
-        const glowWidth = getTextSize(ctx, 'Press \u{2B9D}/W to enable/disable glowing', 4, true).width;
-        drawText(ctx, 64 - glowWidth * 0.5, 108, 'Press \u{2B9D}/W to enable/disable glowing', 4, true);
+
+        const palletteNameWidth = getTextSize(ctx, COLORS[4], 4, true).width;
+        drawText(ctx, 64 - palletteNameWidth * 0.5, 118, COLORS[4], 4, true);
+
         ctx.globalAlpha = globalOpacity;
     }
     
@@ -914,16 +1006,19 @@ function titleScreen(ctx) {
         drawText(ctx, 64 - highScoreWidth * 0.5, 84, hsString, 6, true);
     }
     
-    setColor(ctx, 1);
+    setColor(ctx, 0);
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
     drawRect(ctx, 0, 0, 15, 128);
     drawRect(ctx, 113, 0, 15, 128);
+    ctx.globalAlpha = globalOpacity;
     
     const offsetY = -(titleBarPos % 16);
+
+    setColor(ctx, 1);
     
     for (let i = 0; i < 10; i++) {
-        const thickness = 5;
-        setColor(ctx, 0);
-        ctx.globalAlpha = 1;
+        const thickness = 11;
         drawPoly(ctx, 0, i * 16 + offsetY - 16, [
             [ 0,  0],
             [ 0,  0 + thickness],
@@ -937,7 +1032,6 @@ function titleScreen(ctx) {
             [ 0, 15 + thickness],
             [ 0, 15]
         ]);
-        ctx.globalAlpha = globalOpacity;
     }
     
     titleBarPos += 0.15;
@@ -1021,6 +1115,17 @@ function update(ctx, time) {
         genNextLayer();
     }
     
+    for (let i = 0; i < map.length; i++) {
+        if (mapHeight + i*16 + 16 >= yPos + pHeight*0.5 - 64 
+        && mapHeight + i*16 - 16 <= yPos + pHeight*0.5 + 64) {
+            for (let x = 0; x < 6; x++) {
+                tileDrawFunctions[map[i][x]](ctx, x, mapHeight + i*16 - 16 - (yPos + pHeight*0.5 - 64), x, i);
+            }
+        }
+    }
+    
+    drawParticles(ctx)
+
     if (!isDead) {
         globalOpacity = Math.min(globalOpacity + 1/15, 1);
         drawPlayer(ctx);
@@ -1032,27 +1137,18 @@ function update(ctx, time) {
         }
     }
     
-    for (let i = 0; i < map.length; i++) {
-        if (mapHeight + i*16 + 16 >= yPos + pHeight*0.5 - 64 
-        && mapHeight + i*16 - 16 <= yPos + pHeight*0.5 + 64) {
-            for (let x = 0; x < 6; x++) {
-                tileDrawFunctions[map[i][x]](ctx, x, mapHeight + i*16 - 16 - (yPos + pHeight*0.5 - 64), x, i);
-            }
-        }
-    }
-    
-    drawParticles(ctx)
-    
-    setColor(ctx, 1);
+    setColor(ctx, 0);
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
     drawRect(ctx, 0, 0, 15, 128);
     drawRect(ctx, 113, 0, 15, 128);
+    ctx.globalAlpha = globalOpacity;
     
     const offsetY = -(yPos % 16);
+    setColor(ctx, 1);
     
-    for (let i = 0; i < 10; i++) {
-        const thickness = 5;
-        setColor(ctx, 0);
-        ctx.globalAlpha = 1;
+    for (let i = 0; i < 10; i++) { // Draw side bars
+        const thickness = 11;
         drawPoly(ctx, 0, i * 16 + offsetY - 16, [
             [ 0,  0],
             [ 0,  0 + thickness],
@@ -1066,16 +1162,15 @@ function update(ctx, time) {
             [ 0, 15 + thickness],
             [ 0, 15]
         ]);
-        ctx.globalAlpha = globalOpacity;
     }
 
     if (paused) {
-        ctx.globalAlpha = globalOpacity * 0.875;
+        ctx.globalAlpha = globalOpacity * 0.5;
         setColor(ctx, 0);
         drawRect(ctx, 0, 0, 128, 128);
         ctx.globalAlpha = globalOpacity;
 
-        setColor(ctx, 2);
+        setColor(ctx, 3);
 
         const pauseTextWidth = getTextSize(ctx, 'Paused', 10, true).width;
         drawText(ctx, 64 - pauseTextWidth * 0.5, 59, 'Paused', 10, true);
@@ -1156,7 +1251,7 @@ function initNewGame(ctx) {
 titleScreen(ctx);
 
 function drawPlayer(ctx) {
-    setColor(ctx, 2);
+    setColor(ctx, 3);
     drawRect(ctx, xPos, (128-pHeight)/2, pWidth, pHeight);
 }
 
