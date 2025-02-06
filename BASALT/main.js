@@ -496,8 +496,7 @@ const particles = []; // Stored as [x, y, age, type, other data]
 
 const particleDrawFunctions = [
     drawBrickBreak,
-    drawBombShockwave,
-    draw500Points
+    drawBombShockwave
 ];
 
 function drawParticles(ctx) {
@@ -602,18 +601,6 @@ function drawBombShockwave(particle, ctx) { // This function is cursed and I hat
     }
     
     return particle[2] < 0;
-}
-
-// Unused particle
-function draw500Points(particle, ctx) {
-    const dimensions = getTextSize(ctx, '+500', 8, true);
-    setColor(ctx, 3);
-    ctx.globalAlpha = (1 - particle[2] / 30) * globalOpacity;
-    drawText(ctx, particle[0] - dimensions.width * 0.5, particle[1] - yPos - particle[2] * 0.1, '+500', 4, true);
-    ctx.globalAlpha = globalOpacity;
-
-    particle[2]++;
-    return particle[2] > 30;
 }
 
 function addCommas(numericString) {
@@ -765,103 +752,22 @@ const keyCodes = [
 ];
 
 const palettes = [
-    [
-        '#10121c',
-        '#fa0c1c',
-        '#f5f4e6',
-        '#f5f4e6',
-        'Mantle'
-    ], [
-        '#26854c',
-        '#5ab552',
-        '#9de64e',
-        '#9de64e',
-        'Verdant'
-    ], [
-        '#94493a',
-        '#e98537',
-        '#f3a833',
-        '#f3a833',
-        'Sands'
-    ], [
-        '#081820',
-        '#88c070',
-        '#e0f8d0',
-        '#e0f8d0',
-        'Luminance'
-    ], [
-        '#45283c',
-        '#66313d',
-        '#ac3232',
-        '#ac3232',
-        'Sanguine'
-    ], [
-        '#8e6bff',
-        '#fe89d9',
-        '#f3bbe7',
-        '#f3bbe7',
-        'Sugar Rush'
-    ], [
-        '#8d697a',
-        '#ffaa5e',
-        '#ffd4a3',
-        '#ffd4a3',
-        'Splendor'
-    ], [
-        '#1d1017',
-        '#3b1725',
-        '#73172d',
-        '#73172d',
-        'Aberration'
-    ], [
-        '#ded9da',
-        '#e61523',
-        '#ded9da',
-        '#e61523',
-        'Labyrinth'
-    ], [
-        '#3e2731',
-        '#e43b44',
-        '#ead4aa',
-        '#ead4aa',
-        'Cozy'
-    ], [
-        '#68386c',
-        '#f77622',
-        '#fee761',
-        '#fee761',
-        'Spirit'
-    ], [
-        '#262b44',
-        '#5a6988',
-        '#c0cbdc',
-        '#c0cbdc',
-        'Superstructure'
-    ], [
-        '#252446',
-        '#1e579c',
-        '#0098db',
-        '#0098db',
-        'Deep Blue'
-    ], [
-        '#212123',
-        '#868188',
-        '#f2f0e5',
-        '#f488ae',
-        'Yaya!'
-    ], [
-        '#d03791',
-        '#fe6c90',
-        '#ffffff',
-        '#ffffff',
-        'Cherry'
-    ], [
-        '#202020',
-        '#393939',
-        '#cd894a',
-        '#c0cbdc',
-        'Affluence'
-    ]
+    ['#10121c', '#fa0c1c', '#f5f4e6', '#f5f4e6', 'Mantle'],
+    ['#26854c', '#5ab552', '#9de64e', '#9de64e', 'Verdant'],
+    ['#94493a', '#e98537', '#f3a833', '#f3a833', 'Sands'],
+    ['#081820', '#88c070', '#e0f8d0', '#e0f8d0', 'Luminance'],
+    ['#45283c', '#66313d', '#ac3232', '#ac3232', 'Sanguine'],
+    ['#8e6bff', '#fe89d9', '#f3bbe7', '#f3bbe7', 'Sugar Rush'],
+    ['#8d697a', '#ffaa5e', '#ffd4a3', '#ffd4a3', 'Splendor'],
+    ['#1d1017', '#3b1725', '#73172d', '#73172d', 'Aberration'],
+    ['#ded9da', '#e61523', '#ded9da', '#e61523', 'Labyrinth'],
+    ['#3e2731', '#e43b44', '#ead4aa', '#ead4aa', 'Cozy'],
+    ['#68386c', '#f77622', '#fee761', '#fee761', 'Spirit'],
+    ['#262b44', '#5a6988', '#c0cbdc', '#c0cbdc', 'Superstructure'],
+    ['#252446', '#1e579c', '#0098db', '#0098db', 'Deep Blue'],
+    ['#212123', '#868188', '#f2f0e5', '#f488ae', 'Yaya!'],
+    ['#d03791', '#fe6c90', '#ffffff', '#ffffff', 'Cherry'],
+    ['#202020', '#393939', '#cd894a', '#c0cbdc', 'Affluence']
 ];
 
 let currentCodeIndex = 0;
