@@ -680,7 +680,7 @@ function drawDeathScreen(ctx, timer) {
         const textDistanceScale = textSize * 0.125;
         
         if (timer > second * 7.5) {
-            let fsText = addCommas((rocksDestroyed * 20 + gemsDestroyed * 500).toFixed(0));
+            let fsText = addCommas((rocksDestroyed * 500 + gemsDestroyed * 1000).toFixed(0));
             
             if (timer < second * 8) {
                 rockString = '0';
@@ -690,7 +690,7 @@ function drawDeathScreen(ctx, timer) {
                 rockString = Math.floor(rocksDestroyed * Math.min((timer - second * 8)/second, 1));
                 gemString = Math.floor(gemsDestroyed * Math.min((timer - second * 8)/second, 1));
                 
-                fsText = addCommas((rockString * 20 + gemString * 500).toFixed(0));
+                fsText = addCommas((rockString * 500 + gemString * 1000).toFixed(0));
                 
                 rockString = `${rockString}`
                 gemString = `${gemString}`
@@ -1084,7 +1084,7 @@ function update(ctx, time) {
         const pauseTextWidth = getTextSize(ctx, 'Paused', 10, true).width;
         drawText(ctx, 64 - pauseTextWidth * 0.5, 59, 'Paused', 10, true);
 
-        const scoreString = addCommas((rocksDestroyed * 20 + gemsDestroyed * 500).toFixed());
+        const scoreString = addCommas((rocksDestroyed * 500 + gemsDestroyed * 1000).toFixed());
 
         const scoreTextWidth = getTextSize(ctx, 'Score', 6, true).width;
         drawText(ctx, 64 - scoreTextWidth * 0.5, 72, 'Score', 6, true);
