@@ -174,6 +174,7 @@ let globalOpacity = 1;
 let tiles = []; // For debugging, no gameplay use
 
 const hitBombs = [];
+
 const maxBombTime = 50; // Change later?
 
 function doPlayerLogic() {
@@ -488,6 +489,7 @@ function explodeBomb(index) {
             }
         }
     }
+
     // idk why it's +51, I just plugged in random numbers until it looked right
     particles.push([bombX*16+24, bombY*16+mapHeight+51, 60, 1]);
 }
@@ -528,7 +530,7 @@ function drawBrickBreak(particle, ctx) {
         }
     }
     
-    setColor(ctx, particle[8]);
+    setColor(ctx, particle[9] ? 3 : particle[8]);
     drawPoly(ctx, particle[0], particle[1] - yPos, arr);
     
     if ((!isDead || particle[9]) && !paused) {
@@ -1053,7 +1055,8 @@ function update(ctx, time) {
     const offsetY = -(yPos % 16);
     setColor(ctx, 1);
     
-    for (let i = 0; i < 10; i++) { // Draw side bars
+    // Draw side bars
+    for (let i = 0; i < 10; i++) {
         const thickness = 11;
         drawPoly(ctx, 0, i * 16 + offsetY - 16, [
             [ 0,  0],
