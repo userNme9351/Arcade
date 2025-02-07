@@ -99,7 +99,7 @@ let playerY = 0;
 let moveCooldown = 0;
 
 const levels = [
-    's ww  www/ 3w  w w/ ww w www/6 www/  ww  ww /3w3 www'
+    '  wws / ww  b/ ww w /6 /  ww  /3w3 '
 ];
 
 const boxes = [];
@@ -256,18 +256,6 @@ function generateWallDrawCalls(drawCalls) {
         }
     }
 
-    //for (let y = -1; y <= levelHeight; y++) {
-    //    for (let x = -1; x <= levelWidth; x++) {
-    //        if (rightCoverData[(y + 1) * (levelWidth + 2) + x + 1]) {
-    //            debugCalls.push(x + 0.75, y + 0.375, 0.5, 0.25);
-    //        }
-    //
-    //        if (downCoverData[(y + 1) * (levelWidth + 2) + x + 1]) {
-    //            debugCalls.push(x + 0.375, y + 0.75, 0.25, 0.5);
-    //        }
-    //    }
-    //}
-
     const rightMesh = doGreedyMeshing(rightCoverData);
     const downMesh = doGreedyMeshing(downCoverData);
 
@@ -324,10 +312,6 @@ function generateWallDrawCalls(drawCalls) {
                 drawCalls.push(x - 1, y - 1, 1, 1)
             }
         }
-    }
-
-    for (let i = 0; i < drawCalls.length; i += 4) {
-        console.log(i/4, drawCalls[i], drawCalls[i + 1], drawCalls[i + 2], drawCalls[i + 3]);
     }
 }
 
@@ -460,19 +444,19 @@ function drawWalls(ctx, drawCalls) {
     ctx.fillStyle = '#787887';
     for (let i = 0; i < drawCalls.length; i+=4) {
         drawRect(ctx,
-            (drawCalls[i]   + 0.125) * levelScale + levelXOffset,
-            (drawCalls[i+1] + 0.125) * levelScale + levelYOffset,
-            (drawCalls[i+2] - 0.25) * levelScale,
-            (drawCalls[i+3] - 0.25) * levelScale);
+            (drawCalls[i]   + 0.1) * levelScale + levelXOffset,
+            (drawCalls[i+1] + 0.1) * levelScale + levelYOffset,
+            (drawCalls[i+2] - 0.2) * levelScale,
+            (drawCalls[i+3] - 0.2) * levelScale);
     }
 
     ctx.fillStyle = '#C2C2C6';
     for (let i = 0; i < drawCalls.length; i+=4) {
         drawRect(ctx,
-            (drawCalls[i]   + 0.25) * levelScale + levelXOffset,
-            (drawCalls[i+1] + 0.25) * levelScale + levelYOffset,
-            (drawCalls[i+2] - 0.5) * levelScale,
-            (drawCalls[i+3] - 0.5) * levelScale);
+            (drawCalls[i]   + 0.2) * levelScale + levelXOffset,
+            (drawCalls[i+1] + 0.2) * levelScale + levelYOffset,
+            (drawCalls[i+2] - 0.4) * levelScale,
+            (drawCalls[i+3] - 0.4) * levelScale);
     }
 }
 
@@ -488,12 +472,53 @@ function drawDebug(ctx, drawCalls) {
 }
 
 function drawBox(ctx, x, y, index) {
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#1E1E25';
     drawRect(ctx,
-        x * levelScale + levelXOffset + levelScale * 0.125,
-        y * levelScale + levelYOffset + levelScale * 0.125,
-        levelScale * 0.75,
-        levelScale * 0.75);
+        (x + 0.1) * levelScale + levelXOffset,
+        (y + 0.1) * levelScale + levelYOffset,
+        levelScale * 0.8,
+        levelScale * 0.8);
+    ctx.fillStyle = '#787887';
+    drawRect(ctx,
+        (x + 0.2) * levelScale + levelXOffset,
+        (y + 0.2) * levelScale + levelYOffset,
+        levelScale * 0.6,
+        levelScale * 0.6);
+
+    const thickness = levelScale * 0.1;
+    const shadowThickness = levelScale * 0.15;
+    const size = levelScale * 0.22;
+
+    const arr = [
+        [thickness-size, size],
+        [-size, size],
+        [-size, size-thickness],
+        [size-thickness, -size],
+        [size, -size],
+        [size, thickness-size]
+    ]
+
+    ctx.fillStyle = '#C2C2C6';
+    drawPoly(ctx, (x + 0.5) * levelScale + levelXOffset, (y + 0.5) * levelScale + levelYOffset, arr);
+
+    ctx.fillStyle = '#787887';
+    drawPoly(ctx, (x + 0.5) * levelScale + levelXOffset, (y + 0.5) * levelScale + levelYOffset, [
+        [-size, shadowThickness-size],
+        [-size, -size],
+        [shadowThickness-size, -size],
+        [size, size-shadowThickness],
+        [size, size],
+        [size-shadowThickness, size]
+    ]);
+
+    for (let i = 0; i < arr.length; i++) {
+        const x = arr[i][0];
+        arr[i][0] = arr[i][1];
+        arr[i][1] = -x;
+    }
+
+    ctx.fillStyle = '#C2C2C6';
+    drawPoly(ctx, (x + 0.5) * levelScale + levelXOffset, (y + 0.5) * levelScale + levelYOffset, arr);
 }
 
 startGameLevel(ctx, 0);
