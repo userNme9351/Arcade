@@ -102,25 +102,48 @@ const levels = [
     '  wws / ww  b/ ww w /6 /  ww  /3w3 '
 ];
 
-const boxes = [];
+const boxes = []; // [x, y, type, rotation?, color?]
 
 const levelDrawCalls = [];
 
-function getTileFromChar(letter, xPos, yPos) {
+/**
+ * @returns {number} The number of characters to skip after this chunk is processed.
+ * @param {number[]} array 
+ * @param {number} count 
+ * @param {string} letter 
+ * @param {number} xPos 
+ * @param {number} yPos 
+ * @param {string} token 
+ * @param {number} tokenIndex 
+ */
+function getTileFromChar(array, count, letter, xPos, yPos, token, tokenIndex) {
+    function pushCount(tile, count) {
+        for (let i = 0; i < count; i++) {
+            array.push(tile);
+        }
+    }
+
     switch (letter) {
         case ' ':
-            return 0;
+            pushCount(0, count);
+            return 1;
         case 'w':
+            pushCount(1, count);
             return 1;
         case 's':
             playerX = xPos;
             playerY = yPos;
-            return 0;
+            pushCount(0, count);
+            return 1;
         case 'e':
-            return 2;
+            pushCount(2, count);
+            return 1;
         case 'b':
             boxes.push([xPos, yPos, 0]);
-            return 0;
+            pushCount(0, count);
+            return 1;
+        default:
+            throw new Error(`Invalid RLE token! Segment: ${yPos}; Index:${tokenIndex}`);
     }
 }
 
@@ -139,19 +162,19 @@ function isSolid(tileType) {
 
 function parseLevelToken(token, yPos) {
     const arr = [];
+
     let xPos = 0;
-    for (let i = 0; i < token.length; i++) {
+    for (let i = 0; i < token.length;) {
         const first = token.charAt(i);
         if (/\d/.test(first)) {
             const count = parseInt(first);
             i++;
-            const tile = getTileFromChar(token.charAt(i), xPos, yPos);
-            for (let j = 0; j < count; j++) {
-                arr.push(tile);
-                xPos++;
-            }
+            i += getTileFromChar(arr, count, token.charAt(i), xPos, yPos, token, i);
+            xPos += count;
         } else {
-            arr.push(getTileFromChar(token.charAt(i), xPos, yPos));
+            if (yPos === 0) {console.log(arr);}
+
+            i += getTileFromChar(arr, 1, token.charAt(i), xPos, yPos, token, i);
             xPos++;
         }
     }
@@ -223,12 +246,6 @@ function generateWallDrawCalls(drawCalls) {
                         }
                         if (doBreak) {
                             break;
-                        }
-                    }
-
-                    for (let nx = x; nx < x + dx; nx++) {
-                        for (let ny = y; ny < y + dy; ny++) {
-                            //array[ny * (levelWidth  + 2) + nx] = false;
                         }
                     }
 
