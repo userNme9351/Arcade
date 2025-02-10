@@ -160,6 +160,8 @@ if (highScore > 10000) {
 const pWidth = 10;
 const pHeight = 10;
 
+const maxFallSpeed = 10;
+
 let xPos = (128 - pWidth)/2;
 let yPos = 0;
 
@@ -209,7 +211,7 @@ function doPlayerLogic() {
     }
     dY += 0.1; // Gravity
     
-    dY = Math.min(dY, 10); // Max fall speed
+    dY = Math.min(dY, maxFallSpeed); // Max fall speed
     
     // Break things
     if (dY > 0 && Math.floor((yPos+pHeight-mapHeight)/16+1) >= 0) {
@@ -1110,7 +1112,7 @@ function initNewGame(ctx) {
     yPos = 0;
     
     dX = 0;
-    dY = 10;
+    dY = maxFallSpeed;
     
     isDead = false;
     paused = false;
@@ -1164,11 +1166,13 @@ function drawPlayer(ctx) {
     drawRect(ctx, xPos, (128-pHeight)/2, pWidth, pHeight);
 }
 
+const lineGlitchOffset = 0.1;
+
 function drawTile(ctx, x, vo, tx, ty) {
     const cX = x*16 + 16;
     const cY = vo;
     setColor(ctx, 1);
-    drawRect(ctx, cX, cY, 16, 16);
+    drawRect(ctx, cX, cY, 16, 16 + lineGlitchOffset);
 }
 
 function drawBomb(ctx, x, vo, tx, ty) {
@@ -1202,7 +1206,7 @@ function drawGem(ctx, x, vo, tx, ty) {
     const cX = x*16 + 16;
     const cY = vo;
     setColor(ctx, 1);
-    drawRect(ctx, cX, cY, 16, 16);
+    drawRect(ctx, cX, cY, 16, 16 + lineGlitchOffset);
     setColor(ctx, 2);
     let arr = [];
     for (let i = 0; i < 3; i++) {
