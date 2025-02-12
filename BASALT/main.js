@@ -125,6 +125,24 @@ const maps = [
         ' rrb r',
         '  rrgr',
         'grr  r'
+    ], [
+        'sssbss',
+        'rgrrgb',
+        ' rrb r',
+        ' bg  r',
+        'grrsb r'
+    ], [
+        'rrrrrr',
+        'gggggg',
+        ' rrb r',
+        ' bg  r',
+        '      r'
+    ], [
+        '   g  ',
+        '   s  ',
+        '   s  ',
+        '   s  ',
+        '  s s '
     ]
 ];
 
@@ -160,8 +178,6 @@ if (highScore > 10000) {
 const pWidth = 10;
 const pHeight = 10;
 
-const maxFallSpeed = 10;
-
 let xPos = (128 - pWidth)/2;
 let yPos = 0;
 
@@ -177,7 +193,7 @@ let tiles = []; // For debugging, no gameplay use
 
 const hitBombs = [];
 
-const maxBombTime = 50; // Change later?
+const maxBombTime = 45; // Change later?
 
 function doPlayerLogic() {
     let xKey = false;
@@ -211,7 +227,7 @@ function doPlayerLogic() {
     }
     dY += 0.1; // Gravity
     
-    dY = Math.min(dY, maxFallSpeed); // Max fall speed
+    dY = Math.min(dY, 5); // Max fall speed
     
     // Break things
     if (dY > 0 && Math.floor((yPos+pHeight-mapHeight)/16+1) >= 0) {
@@ -316,10 +332,10 @@ function doPlayerLogic() {
                         }
                     }
 
-                    const currentScore = rocksDestroyed * 2 + gemsDestroyed * 50;
+                    const currentScore = rocksDestroyed * 50 + gemsDestroyed * 100;
                     if (currentScore > highScore) {
                         highScore = currentScore;
-                        if (highScore > 10000) {
+                        if (highScore > 50000) {
                             localStorage.setItem('BASALT.variables.codeCompleted', 1);
                         }
                         localStorage.setItem('BASALT.variables.highScore', highScore.toFixed(0));
@@ -614,9 +630,9 @@ function addCommas(numericString) {
 function drawDeathScreen(ctx, timer) {
     const second = 60;
     if (timer > second * 4) {
-        const width = getTextSize(ctx, 'Game Over', 14, true).width;
+        const width = getTextSize(ctx, 'GG', 14, true).width;
         setColor(ctx, 3);
-        drawText(ctx, 64 - width * 0.5, 12, 'Game Over', 14, true);
+        drawText(ctx, 64 - width * 0.5, 12, 'GG', 14, true);
     }
     if (timer > second * 5) { // Game timer
         let timeText;
@@ -682,7 +698,7 @@ function drawDeathScreen(ctx, timer) {
         const textDistanceScale = textSize * 0.125;
         
         if (timer > second * 7.5) {
-            let fsText = addCommas((rocksDestroyed * 20 + gemsDestroyed * 500).toFixed(0));
+            let fsText = addCommas((rocksDestroyed * 500 + gemsDestroyed * 1000).toFixed(0));
             
             if (timer < second * 8) {
                 rockString = '0';
@@ -692,14 +708,14 @@ function drawDeathScreen(ctx, timer) {
                 rockString = Math.floor(rocksDestroyed * Math.min((timer - second * 8)/second, 1));
                 gemString = Math.floor(gemsDestroyed * Math.min((timer - second * 8)/second, 1));
                 
-                fsText = addCommas((rockString * 20 + gemString * 500).toFixed(0));
+                fsText = addCommas((rockString * 500 + gemString * 1000).toFixed(0));
                 
                 rockString = `${rockString}`
                 gemString = `${gemString}`
             } else if (timer >= second * 9.5) {
                 if (highScore >= 0) {
-                    const hsTextWidth = getTextSize(ctx, 'High Score', 4, true).width;
-                    drawText(ctx, 64 - hsTextWidth * 0.5, 98, 'High Score', 4, true);
+                    const hsTextWidth = getTextSize(ctx, 'Your PB', 4, true).width;
+                    drawText(ctx, 64 - hsTextWidth * 0.5, 98, 'Your PB', 4, true);
             
                     const hsString = addCommas((highScore * 10).toFixed());
             
@@ -730,19 +746,19 @@ function drawDeathScreen(ctx, timer) {
             drawPoly(ctx, 49 + Math.max(rockWidth, gemWidth) * textDistanceScale, 41, xArr);
             drawPoly(ctx, 49 + Math.max(rockWidth, gemWidth) * textDistanceScale, 63, xArr);
             
-            drawText(ctx, 55 + Math.max(rockWidth, gemWidth) * textDistanceScale, 43.5, '20', 8, true);
-            drawText(ctx, 55 + Math.max(rockWidth, gemWidth) * textDistanceScale, 65.5, '500', 8, true);
+            drawText(ctx, 55 + Math.max(rockWidth, gemWidth) * textDistanceScale, 43.5, '500', 8, true);
+            drawText(ctx, 55 + Math.max(rockWidth, gemWidth) * textDistanceScale, 65.5, '1000', 8, true);
             
-            const fsWidth = getTextSize(ctx, 'Final Score', 6, true).width;
-            drawText(ctx, 64 - fsWidth * 0.5, 80, 'Final Score', 6, true);
+            const fsWidth = getTextSize(ctx, 'The Green Green', 6, true).width;
+            drawText(ctx, 64 - fsWidth * 0.5, 80, 'The Green', 6, true);
             
             const fsCounterWidth = getTextSize(ctx, fsText, 8, true).width;
             drawText(ctx, 64 - fsCounterWidth * 0.5, 89, fsText, 8, true);
         }
         
         if (timer > second * 10) {
-            const restartWidth = getTextSize(ctx, 'Press \u{2B9F} or S to Restart', 8, true).width;
-            drawText(ctx, 64 - restartWidth * 0.5, 120, 'Press \u{2B9F} or S to Restart', 8, true);
+            const restartWidth = getTextSize(ctx, 'Press \u{2B9F} or S to fall', 8, true).width;
+            drawText(ctx, 64 - restartWidth * 0.5, 120, 'Press \u{2B9F} or S to fall', 8, true);
         }
     }
 }
@@ -771,7 +787,9 @@ const palettes = [
     ['#252446', '#1e579c', '#0098db', '#0098db', 'Deep Blue'],
     ['#212123', '#868188', '#f2f0e5', '#f488ae', 'Yaya!'],
     ['#d03791', '#fe6c90', '#ffffff', '#ffffff', 'Cherry'],
-    ['#202020', '#393939', '#cd894a', '#c0cbdc', 'Affluence']
+    ['#202020', '#393939', '#cd894a', '#c0cbdc', 'Affluence'],
+    ['#ffffff', '#ffffff', '#ffffff', '#000000', 'Flashbang'],
+    ['#oao908', '#d7d9b1', '#ee6352', '#000001', 'Users palette']
 ];
 
 let currentCodeIndex = 0;
@@ -884,8 +902,8 @@ function titleScreen(ctx) {
         tipFadeTimer = Math.min(tipFadeTimer + 1, 60);
         ctx.globalAlpha = globalOpacity * (tipFadeTimer / 60);
         
-        const glowWidth = getTextSize(ctx, 'Press \u{2B9D}/W to enable/disable glowing', 4, true).width;
-        drawText(ctx, 64 - glowWidth * 0.5, 100, 'Press \u{2B9D}/W to enable/disable glowing', 4, true);
+        const glowWidth = getTextSize(ctx, 'Press \u{2B9D}/W to glow', 4, true).width;
+        drawText(ctx, 64 - glowWidth * 0.5, 100, 'Press \u{2B9D}/W to glow', 4, true);
 
         const palletteWidth = getTextSize(ctx,
             'Press \u{2B9C}\u{200A}/\u{200A}A and \u{2B9E}\u{200A}/\u{200A}D to cycle palettes', 4, true).width;
@@ -900,15 +918,15 @@ function titleScreen(ctx) {
     
     ctx.globalAlpha = globalOpacity;
     
-    const titleWidth = getTextSize(ctx, '\u{300A} BASALT \u{300B}', 14, true).width;
-    drawText(ctx, 64 - titleWidth * 0.5, 48, '\u{300A} BASALT \u{300B}', 14, true);
+    const titleWidth = getTextSize(ctx, '\u{300A} Users Basalt \u{300B}', 12, true).width;
+    drawText(ctx, 64 - titleWidth * 0.5, 48, '\u{300A} Users Basalt \u{300B}', 12, true);
     
-    const subtitleWidth = getTextSize(ctx, 'Press \u{2B9F}/\u{200A}S to Dive', 10, true).width;
-    drawText(ctx, 64 - subtitleWidth * 0.5, 64, 'Press \u{2B9F}/\u{200A}S to Dive', 10, true);
+    const subtitleWidth = getTextSize(ctx, 'Press \u{2B9F}/\u{200A}S to fall', 10, true).width;
+    drawText(ctx, 64 - subtitleWidth * 0.5, 64, 'Press \u{2B9F}/\u{200A}S to fall', 10, true);
 
     if (highScore >= 0) {
-        const hsTextWidth = getTextSize(ctx, 'High Score', 6, true).width;
-        drawText(ctx, 64 - hsTextWidth * 0.5, 76, 'High Score', 6, true);
+        const hsTextWidth = getTextSize(ctx, 'PB', 6, true).width;
+        drawText(ctx, 64 - hsTextWidth * 0.5, 76, 'PB', 6, true);
 
         const hsString = addCommas((highScore * 10).toFixed());
 
@@ -1083,13 +1101,13 @@ function update(ctx, time) {
 
         setColor(ctx, 3);
 
-        const pauseTextWidth = getTextSize(ctx, 'Paused', 10, true).width;
-        drawText(ctx, 64 - pauseTextWidth * 0.5, 59, 'Paused', 10, true);
+        const pauseTextWidth = getTextSize(ctx, 'Hammer time', 10, true).width;
+        drawText(ctx, 64 - pauseTextWidth * 0.5, 59, 'Hammer time', 10, true);
 
-        const scoreString = addCommas((rocksDestroyed * 20 + gemsDestroyed * 500).toFixed());
+        const scoreString = addCommas((rocksDestroyed * 500 + gemsDestroyed * 1000).toFixed());
 
-        const scoreTextWidth = getTextSize(ctx, 'Score', 6, true).width;
-        drawText(ctx, 64 - scoreTextWidth * 0.5, 72, 'Score', 6, true);
+        const scoreTextWidth = getTextSize(ctx, 'Green', 6, true).width;
+        drawText(ctx, 64 - scoreTextWidth * 0.5, 72, 'Green', 6, true);
 
         const scoreWidth = getTextSize(ctx, scoreString, 8, true).width;
         drawText(ctx, 64 - scoreWidth * 0.5, 80, scoreString, 8, true);
@@ -1112,7 +1130,7 @@ function initNewGame(ctx) {
     yPos = 0;
     
     dX = 0;
-    dY = maxFallSpeed;
+    dY = 10;
     
     isDead = false;
     paused = false;
@@ -1166,13 +1184,11 @@ function drawPlayer(ctx) {
     drawRect(ctx, xPos, (128-pHeight)/2, pWidth, pHeight);
 }
 
-const lineGlitchOffset = 0.1;
-
 function drawTile(ctx, x, vo, tx, ty) {
     const cX = x*16 + 16;
     const cY = vo;
     setColor(ctx, 1);
-    drawRect(ctx, cX, cY, 16, 16 + lineGlitchOffset);
+    drawRect(ctx, cX, cY, 16, 16);
 }
 
 function drawBomb(ctx, x, vo, tx, ty) {
@@ -1206,7 +1222,7 @@ function drawGem(ctx, x, vo, tx, ty) {
     const cX = x*16 + 16;
     const cY = vo;
     setColor(ctx, 1);
-    drawRect(ctx, cX, cY, 16, 16 + lineGlitchOffset);
+    drawRect(ctx, cX, cY, 16, 16);
     setColor(ctx, 2);
     let arr = [];
     for (let i = 0; i < 3; i++) {
